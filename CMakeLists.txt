@@ -8,7 +8,7 @@ enable_testing()
 
 find_package(glfw3 3.3 REQUIRED)
 
-add_executable(trygl main.cpp glad/src/glad.c shader.h shader.cpp stb/stb_image.cpp)
+add_executable(trygl main.cpp glad/src/glad.c shader.h shader.cpp camera.h camera.cpp stb/stb_image.cpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/glm.hpp)
 include_directories(glad/include)
 include_directories(glm)
 target_link_libraries(trygl glfw ${CMAKE_DL_LIBS})
