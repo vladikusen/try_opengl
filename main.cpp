@@ -25,7 +25,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.5f, 30.0f));
+Camera camera(glm::vec3(0.0f, 0.5f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -36,7 +36,6 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 // lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main()
 {
@@ -83,9 +82,6 @@ int main()
  // ------------------------------------
     stbi_set_flip_vertically_on_load(false);
 
-    Shader shader("/home/user/Documents/opengl/shader.vs", "/home/user/Documents/opengl/shader.fs");
-    Shader planetShader("/home/user/Documents/opengl/planet.vs", "/home/user/Documents/opengl/shader.fs");
-
 
 
 
@@ -93,104 +89,48 @@ int main()
     // ------------------------------------------------------------------
 
     float quadVertices[] = {
-    -0.05f, 0.05f, 1.0f, 0.0f, 0.0f,
-    0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-    -0.05f, -0.05f, 0.0f, 0.0f, 1.0f,
-    -0.05f, 0.05f, 1.0f, 0.0f, 0.0f,
-    0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-    0.05f, 0.05f, 0.0f, 1.0f, 1.0f
+        -10.0f, -0.5f,  10.0f, 0.0f, 1.0f,
+        -10.0f, -0.5f, -10.0f, 0.0f, 0.0f,
+         10.0f, -0.5f, -10.0f, 1.0f, 0.0f,
+        -10.0f, -0.5f,  10.0f, 0.0f, 1.0f,
+         10.0f, -0.5f, -10.0f, 1.0f, 0.0f,
+         10.0f, -0.5f,  10.0f, 1.0f, 1.0f  
     };
 
-    // positions all containers
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  0.0f, -4.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-
-    float points[] = {
-        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
-         0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f
+    glm::vec3 lightPositions[] = {
+        glm::vec3(-3.0f, 0.0f, 0.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f,  0.0f, 0.0f),
+        glm::vec3(3.0f,  0.0f, 0.0f)
     };
 
 
-    unsigned int quadVAO;
-    glGenVertexArrays(1, &quadVAO);
-    glBindVertexArray(quadVAO);
-
+    unsigned floorVAO;
+    glGenVertexArrays(1, &floorVAO);
+    glBindVertexArray(floorVAO);
     unsigned int quadVBO;
     glGenBuffers(1, &quadVBO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
-
-
-    unsigned int amount = 100000;
-    glm::mat4* modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime());
-    float radius = 150.0f;
-    float offset = 2.5f;
-    for(unsigned int i = 0; i < amount; i++) {
-        glm::mat4 model = glm::mat4(1.0f);
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int) (2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int) (2 * offset * 100)) / 100.0f - offset;
-        float y = displacement * 0.4f;
-        displacement = (rand() % (int) (2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x, y, z));
-
-        float scale = (rand() % 20) / 100.0f + 0.05f;
-        model = glm::scale(model, glm::vec3(scale));
-
-        float rotAngle = (rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-
-        modelMatrices[i] = model;
-    }
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    Model planet("/home/user/Documents/opengl/planet/planet.obj");
-    Model rock("/home/user/Documents/opengl/rock/rock.obj");
 
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    unsigned int floorTexture = loadTexture("/home/user/Documents/opengl/wood.png");
 
-    for(unsigned int i = 0; i < rock.meshes.size(); i++) {
-        unsigned int VAO = rock.meshes[i].VAO;
-        glBindVertexArray(VAO);
-        std::size_t v4s = sizeof(glm::vec4);
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(1 * v4s));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(2 * v4s));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(3 * v4s));
-
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
-
-        glBindVertexArray(0);
-    }
+    Shader floorShader("/home/user/Documents/opengl/floorShader.vs", "/home/user/Documents/opengl/floorShader.fs");    
+    glm::mat4 floorProjection = glm::perspective(glm::radians(camera.Zoom), (float)800 / (float)600, 0.1f, 100.0f);
+    floorShader.use();
+    // floorShader.setMat4("model", floorModel);
+    floorShader.setMat4("projection", floorProjection);
+    floorShader.setVec3("pointLights[0]", lightPositions[0]);
+    floorShader.setVec3("pointLights[1]", lightPositions[1]);
+    floorShader.setVec3("pointLights[2]", lightPositions[2]);
+    floorShader.setVec3("pointLights[3]", lightPositions[3]);
+    
 
     while (!glfwWindowShouldClose(window))
     {
@@ -202,25 +142,17 @@ int main()
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        planetShader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        
+        floorShader.use();
+        floorShader.setVec3("ViewPos", camera.Position);
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)800 / (float)600, 0.1f, 100.0f);
-        planetShader.setMat4("model", model);
-        planetShader.setMat4("view", view);
-        planetShader.setMat4("projection", projection);
-        planet.Draw(planetShader);
+        floorShader.setMat4("view", view);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glBindVertexArray(floorVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        shader.use();
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-        for(unsigned int i = 0; i < rock.meshes.size(); i++) {
-            glBindVertexArray(rock.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, rock.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
-        }
+        
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
