@@ -95,12 +95,13 @@ int main()
 
     unsigned int woodenTexture = loadTexture("/home/user/Documents/opengl/wood.png");
 
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
 
     unsigned int depthCubemap;
     glGenTextures(1, &depthCubemap);
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
     glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
     for(unsigned int i = 0; i < 6; i++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 
@@ -122,8 +123,6 @@ int main()
     mainShader.use();
     mainShader.setInt("diffuseTexture", 0);
     mainShader.setInt("shadowMap", 1);
-    quadShader.use();
-    quadShader.setInt("depthMap", 0);
 
     glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
@@ -165,12 +164,6 @@ int main()
 
         // 1. render depth of scene to texture (from light's perspective)
         // --------------------------------------------------------------
-        glm::mat4 lightProjection, lightView;
-        glm::mat4 lightSpaceMatrix;
-        float near_plane = 1.0f, far_plane = 7.5f;
-        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-        lightSpaceMatrix = lightProjection * lightView;
         // render scene from light's point of view
         simpleDepthShader.use();
         simpleDepthShader.setMat4("shadowMatrices[0]", shadowTransforms[0]);
@@ -180,17 +173,15 @@ int main()
         simpleDepthShader.setMat4("shadowMatrices[4]", shadowTransforms[4]);
         simpleDepthShader.setMat4("shadowMatrices[5]", shadowTransforms[5]);
         simpleDepthShader.setVec3("lightPos", lightPos);
-        simpleDepthShader.setFloat("far_plane", far_plane);
+        simpleDepthShader.setFloat("far_plane", far);
 
-        glCullFace(GL_FRONT);
+        // glCullFace(GL_FRONT);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
             glClear(GL_DEPTH_BUFFER_BIT);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, woodenTexture);
             renderScene(simpleDepthShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glCullFace(GL_BACK);
+        // glCullFace(GL_BACK);
 
         // reset viewport
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -207,7 +198,7 @@ int main()
         // set light uniforms
         mainShader.setVec3("viewPos", camera.Position);
         mainShader.setVec3("lightPos", lightPos);
-        mainShader.setFloat("far_plane", far_plane);
+        mainShader.setFloat("far_plane", far);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodenTexture);
         glActiveTexture(GL_TEXTURE1);
@@ -234,12 +225,21 @@ int main()
 }
 
 void renderScene(const Shader& currentShader) {
-    // floor
+    // // floor
     glm::mat4 model = glm::mat4(1.0f);
+    // currentShader.setMat4("model", model);
+    // // glBindVertexArray(planeVAO);
+    // // glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    // DrawFloor();
+    glDisable(GL_CULL_FACE);
+    model = glm::scale(model, glm::vec3(5.0f));
     currentShader.setMat4("model", model);
-    // glBindVertexArray(planeVAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
-    DrawFloor();
+    currentShader.setInt("reverse_normals", 1);
+    renderCube();
+    currentShader.setInt("reverse_normals", 0);
+
+    glEnable(GL_CULL_FACE);
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

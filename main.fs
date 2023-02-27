@@ -15,8 +15,8 @@ uniform vec3 viewPos;
 
 uniform float far_plane;
 
-float ShadowCalculation(vec3 fragPosLightSpace) {
-    vec3 fragToLight = fs_in.FragPos - lightPos;
+float ShadowCalculation(vec3 fragPos) {
+    vec3 fragToLight = fragPos - lightPos;
     float closestDepth = texture(shadowMap, fragToLight).r;
     closestDepth *= far_plane;
     float currentDepth = length(fragToLight);
@@ -46,5 +46,7 @@ void main() {
     float shadow = ShadowCalculation(fs_in.FragPos);
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
 
-    FragColor = vec4(lighting, 1.0);
+    // FragColor = vec4(lighting, 1.0);
+    float closestDepth = texture(shadowMap, fs_in.FragPos - lightPos).r;
+    FragColor = vec4(vec3(closestDepth), 1.0);
 }
