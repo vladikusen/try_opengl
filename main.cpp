@@ -1,5 +1,5 @@
 #include <iostream>
-#include <glad/glad.h>
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <math.h>
 #include <glm.hpp>
@@ -89,12 +89,14 @@ int main()
 
 
     Shader mainShader("/home/user/Documents/opengl/main.vs", "/home/user/Documents/opengl/main.fs");
-    unsigned int diffuseTexture = loadTexture("/home/user/Documents/opengl/brickwall.jpg");
-    unsigned int normalTexture = loadTexture("/home/user/Documents/opengl/brickwall_normal.jpg");
+    unsigned int diffuseTexture = loadTexture("/home/user/Documents/opengl/bricks2.jpg");
+    unsigned int normalTexture = loadTexture("/home/user/Documents/opengl/bricks2_normal.jpg");
+    unsigned int dispTexture = loadTexture("/home/user/Documents/opengl/bricks2_disp.jpg");
 
     mainShader.use();
     mainShader.setInt("diffuseMap", 0);
     mainShader.setInt("normalMap", 1);
+    mainShader.setInt("depthMap", 2);
 
     glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
 
@@ -119,8 +121,6 @@ int main()
 
         mainShader.use();
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         mainShader.setMat4("model", model);
         glm::mat4 view = camera.GetViewMatrix();
         mainShader.setMat4("view", view);
@@ -128,11 +128,13 @@ int main()
         mainShader.setMat4("projection", projection);
         mainShader.setVec3("viewPos", camera.Position);
         mainShader.setVec3("lightPos", lightPos);
+        mainShader.setFloat("height_scale", 0.1f);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, normalTexture);
-
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, dispTexture);
         renderScene();
 
         
